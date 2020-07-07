@@ -1,4 +1,3 @@
-void lapic_intr_handler();
 
 struct InterruptDescriptor {
     unsigned short offset_lo;
@@ -39,6 +38,7 @@ static void register_intr_handler(unsigned char index, unsigned long long offset
     d.offset_lo = offset & slice_low_16bit;
     d.offset_mid = (offset >> 16) & slice_low_16bit;
     d.offset_hi = offset >> 32;
+
     
     d.segment = segment;
     d.attribute = attribute;
@@ -52,10 +52,26 @@ void init_intr(){
     load_Idt_to_Idtr();
 
     unsigned char index = 32;
-    unsigned long long offset = (unsigned long long)lapic_intr_handler;
+
+    unsigned long long handler;
+    asm volatile ("lea lapic_intr_handler(%%rip), %[handler]" : [handler]"=r"(handler));
+    unsigned long long offset = handler;
     unsigned short segment;
     asm volatile ("mov %%cs, %0" : "=r"(segment));
-    unsigned short attribute = 0b1110110000000000; //割り込みディスクリプタの権限レベルはひとまず11に。
+    unsigned short attribute = 0b1000111000000000; //割り込みディスクリプタの権限レベルはひとまず00に。
+
+    struct InterruptDescriptor empty_d;
+    empty_d.offset_lo = 0;
+    empty_d.segment = 0;
+    empty_d.attribute = 0;
+    empty_d.offset_mid = 0;
+    empty_d.offset_hi = 0;
+    empty_d.reserved = 0;
+
+    for (int i=0; i < 256; i++) {//IDTzeroクリア
+        IDT[i] = empty_d;
+    }
+
 
     register_intr_handler(index, offset, segment, attribute);
 

@@ -1,5 +1,6 @@
 #include "pm_timer.h"
 #include "util.h"
+#include "interruption.h"
 
 volatile unsigned int *lvt_timer = (unsigned int *)0xfee00320;
 volatile unsigned int *initial_count = (unsigned int *)0xfee00380;
@@ -8,7 +9,7 @@ volatile unsigned int *divide_config = (unsigned int *)0xfee003e0;
 
 unsigned int lapic_timer_freq_khz;
 
-volatile unsigned int *lapic_eoi = 0xfee000b0;
+volatile unsigned int *lapic_eoi = (unsigned int *)0xfee000b0;
 
 void (*reserved_callback)();
 
@@ -22,11 +23,10 @@ unsigned int measure_lapic_freq_khz() {
     *lvt_timer = contents_of_lvt & single_mode_shifter; //単発モードへ移行(すみません。コメントアウト英語だとパッと見でわかりづらいのでやっぱ日本語に戻します)
     *divide_config = contents_of_div | div_config_1_1; //分周比を1:1に設定. 
 
-
-
     *initial_count = max_of_32bit; //カウント開始
 
     pm_timer_wait_millisec(2000);
+
 
     unsigned int counts_after_100msec = *current_count;
 
@@ -41,18 +41,20 @@ unsigned int measure_lapic_freq_khz() {
 }
 
 void lapic_periodic_exec(unsigned int msec, void *callback){
+    init_intr();
     reserved_callback = callback;
-    unsigned int shift_to_num32_and_orbital = 0b1000000000000100000;
-    *lvt_timer = *lvt_timer & shift_to_num32_and_orbital;
-    measure_lapic_freq_khz();
+    unsigned int shift_to_num32_and_orbital = 0b0100000000000100000;
+    *lvt_timer = shift_to_num32_and_orbital;
 
     unsigned int clocks = lapic_timer_freq_khz * msec;
 
     *initial_count = clocks;
+
     return;
 }
 
 void lapic_intr_handler_internal() {
-    (*reserved_callback)();
+    reserved_callback();
+    *lapic_eoi = 100;
     return;
 }

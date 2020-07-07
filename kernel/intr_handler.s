@@ -17,9 +17,7 @@ lapic_intr_handler:
     push %r13
     push %r14
     push %r15
-    sub $24, %rsp
-    call _lapic_intr_handler_internal
-    add $24,%rsp
+    call lapic_intr_handler_internal
     pop %r15
     pop %r14
     pop %r13
@@ -32,7 +30,6 @@ lapic_intr_handler:
     pop %rsi
     pop %rbp
     pop %rbx
-    pop %rdx
     pop %rdx
     pop %rcx
     pop %rax

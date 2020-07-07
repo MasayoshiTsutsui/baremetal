@@ -12,19 +12,14 @@ void start(void *SystemTable __attribute__ ((unused)), struct HardwareInfo *_har
   // To here - Put this part at the top of start() function
   init_frame_buffer(&(hardware_info.fb));
 
-  char *test = "Hello\n";
-  puts(test);
-
   init_acpi_pm_timer(hardware_info.rsdp);
-  pm_timer_wait_millisec(3000);
-
-  unsigned long long value = 1985;
-  unsigned char digit_len = 3;
-  puth(value, digit_len);
-
 
   unsigned int frq = measure_lapic_freq_khz();
-  puth(frq, 8);
+
+  unsigned long long handler;
+  asm volatile ("lea hello(%%rip), %[handler]" : [handler]"=r"(handler));
+
+  lapic_periodic_exec(1000, (void*)handler);
 
   // Do not delete it!
   while (1);

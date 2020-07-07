@@ -68,6 +68,11 @@ void puts(char *str) {
     }
 }
 
+extern void hello() {
+  puts("hello!\n");
+  return;
+}
+
 void puth(unsigned long long value, unsigned char digits_len) {
     
     for (unsigned char current_len = digits_len; current_len > 0; current_len--) {
@@ -88,6 +93,7 @@ void puth(unsigned long long value, unsigned char digits_len) {
     }
     putc('\n');
 }
+
 
 //compare two strings by given length and return 0 when they matches and return 1 when they don't.
 int strcmp(const char* a, const char* b, unsigned int cmp_length) {    

@@ -7,3 +7,5 @@ void puts(char*);
 void puth(unsigned long long, unsigned char);
 
 int strcmp(const char*, const char*, unsigned int);
+
+void hello();
