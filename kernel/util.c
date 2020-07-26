@@ -68,7 +68,7 @@ void puts(char *str) {
     }
 }
 
-extern void hello() {
+void hello() {
   puts("hello!\n");
   return;
 }

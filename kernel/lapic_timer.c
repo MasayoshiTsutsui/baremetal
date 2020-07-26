@@ -11,7 +11,7 @@ unsigned int lapic_timer_freq_khz;
 
 volatile unsigned int *lapic_eoi = (unsigned int *)0xfee000b0;
 
-void (*reserved_callback)();
+void (*reserved_callback)(unsigned long long);
 
 unsigned int measure_lapic_freq_khz() {
     unsigned int max_of_32bit = 0b11111111111111111111111111111111;
@@ -20,7 +20,7 @@ unsigned int measure_lapic_freq_khz() {
     unsigned int single_mode_shifter = 0b11111111111110011111111111111111;
     unsigned int div_config_1_1 = 0b00000000000000000000000000001011;
     
-    *lvt_timer = contents_of_lvt & single_mode_shifter; //単発モードへ移行(すみません。コメントアウト英語だとパッと見でわかりづらいのでやっぱ日本語に戻します)
+    *lvt_timer = contents_of_lvt & single_mode_shifter; //単発モードへ移行
     *divide_config = contents_of_div | div_config_1_1; //分周比を1:1に設定. 
 
     *initial_count = max_of_32bit; //カウント開始
@@ -28,9 +28,9 @@ unsigned int measure_lapic_freq_khz() {
     pm_timer_wait_millisec(2000);
 
 
-    unsigned int counts_after_100msec = *current_count;
+    unsigned int counts_after_2000msec = *current_count;
 
-    unsigned int answer = (max_of_32bit - counts_after_100msec) / 2000;
+    unsigned int answer = (max_of_32bit - counts_after_2000msec) / 2000;
 
     lapic_timer_freq_khz = answer;
 
@@ -53,8 +53,13 @@ void lapic_periodic_exec(unsigned int msec, void *callback){
     return;
 }
 
-void lapic_intr_handler_internal() {
-    reserved_callback();
-    *lapic_eoi = 100;
+void lapic_set_eoi() {
+    *lapic_eoi = 0;
+    return;
+}
+
+void lapic_intr_handler_internal(unsigned long long arg1) {
+    reserved_callback(arg1);
+    *lapic_eoi = 0;
     return;
 }

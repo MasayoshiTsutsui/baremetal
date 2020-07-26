@@ -3,6 +3,7 @@
 #include "util.h"
 #include "pm_timer.h"
 #include "lapic_timer.h"
+#include "sched.h"
 
 void start(void *SystemTable __attribute__ ((unused)), struct HardwareInfo *_hardware_info) {
   // From here - Put this part at the top of start() function
@@ -16,10 +17,11 @@ void start(void *SystemTable __attribute__ ((unused)), struct HardwareInfo *_har
 
   unsigned int frq = measure_lapic_freq_khz();
 
-  unsigned long long handler;
-  asm volatile ("lea hello(%%rip), %[handler]" : [handler]"=r"(handler));
+  void *handler;
+  asm volatile ("lea schedule(%%rip), %[handler]":[handler]"=r"(handler));
 
-  lapic_periodic_exec(1000, (void*)handler);
+  lapic_periodic_exec(1000, handler);
+  init_tasks();
 
   // Do not delete it!
   while (1);

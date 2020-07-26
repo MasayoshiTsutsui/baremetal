@@ -5,7 +5,7 @@ all: kernel apps/app1 apps/app2 apps/app3
 	make -C ../
 	make copy
 
-kernel: kernel.o  segmentation.o hardware.o load_gdt.o font.o util.o port_io.o pm_timer.o lapic_timer.o interruption.o intr_handler.o
+kernel: kernel.o  segmentation.o hardware.o load_gdt.o font.o util.o port_io.o pm_timer.o lapic_timer.o interruption.o intr_handler.o sched.o
 	ld $(LDFLAGS) -T kernel.ld -o $@ $+
 
 apps/app1: apps/app1.o
@@ -18,13 +18,13 @@ apps/app3: apps/app3.o
 	ld $(LDFLAGS) -T apps/app3.ld -o $@ $+
 
 %.o: %.c
-	gcc $(CFLAGS) -c -o $@ $<
+	gcc-7 $(CFLAGS) -c -o $@ $<
 
 apps/%.o: apps/%.c
-	gcc $(CFLAGS) -c -o $@ $<
+	gcc-7 $(CFLAGS) -c -o $@ $<
 
 %.o:%.s
-	gcc $(CFLAGS) -c -o $@ $<
+	gcc-7 $(CFLAGS) -c -o $@ $<
 
 qemu: kernel apps/app1 apps/app2 apps/app3
 	make all
