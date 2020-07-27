@@ -2,33 +2,39 @@
 #include "lapic_timer.h"
 
 #define TASK_NUM 3
-#define STACK_SIZE 4096
+#define APP1_START 0x104000000
+#define APP1_END  0x105000000
+#define APP2_START 0x105000000
+#define APP2_END 0x106000000
+#define APP3_START 0x106000000
+#define APP3_END 0x107000000
+//#define STACK_SIZE 4096
 
-char stack0 [STACK_SIZE];
-char stack1 [STACK_SIZE];
-char stack2 [STACK_SIZE];
+//char stack0 [STACK_SIZE];
+//char stack1 [STACK_SIZE];
+//char stack2 [STACK_SIZE];
 
-static void task0() {
-    while (1) {
-        puts("hello from task0\r\n");
-        volatile int i= 100000000;
-        while(i--);
-    }
-}
-static void task1() {
-    while (1) {
-        puts("hello from task1\r\n");
-        volatile int i= 100000000;
-        while(i--);
-    }
-}
-static void task2() {
-    while (1) {
-        puts("hello from task2\r\n");
-        volatile int i= 100000000;
-        while(i--);
-    }
-}
+//static void task0() {
+    //while (1) {
+        //puts("hello from task0\r\n");
+        //volatile int i= 100000000;
+        //while(i--);
+    //}
+//}
+//static void task1() {
+    //while (1) {
+        //puts("hello from task1\r\n");
+        //volatile int i= 100000000;
+        //while(i--);
+    //}
+//}
+//static void task2() {
+    //while (1) {
+        //puts("hello from task2\r\n");
+        //volatile int i= 100000000;
+        //while(i--);
+    //}
+//}
 
 struct Task {
     unsigned long long sp;
@@ -49,7 +55,7 @@ static void init_task(int idx, unsigned char *stack_bottom, unsigned long long r
         "mov %%cs, %0":"=r"(cs_reg)
     );
 
-    unsigned long long cs = (unsigned long long)cs_reg; //最終的には8byteアラインするから
+    unsigned long long cs = (unsigned long long)cs_reg; //最終的には8byte幅にするから
 
     //ここから実際にstackに各レジスタの値を積んでいく
 
@@ -78,11 +84,12 @@ static void init_task(int idx, unsigned char *stack_bottom, unsigned long long r
 }
 
 void init_tasks() {
-    init_task(1, (unsigned char *)(stack1+STACK_SIZE), (unsigned long long)task1);
-    init_task(2, (unsigned char *)(stack2+STACK_SIZE), (unsigned long long)task2);
-    unsigned long long sp0 = (unsigned long long)(stack0+STACK_SIZE);
+    init_task(1, (unsigned char *)APP2_END, (unsigned long long)APP2_START);
+    init_task(2, (unsigned char *)APP3_END, (unsigned long long)APP3_START);
+    unsigned long long sp0 = (unsigned long long)APP1_END;
     asm volatile ("mov %0, %%rsp"::"m"(sp0));
-    task0();
+    unsigned long long rip = APP1_START;
+    asm volatile ("jmp %[app1_adr]"::[app1_adr]"m"(rip));
 }
 
 unsigned char current_idx = 0;

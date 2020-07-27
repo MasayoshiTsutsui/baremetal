@@ -51,15 +51,7 @@ static void register_intr_handler(unsigned char index, unsigned long long offset
 void init_intr(){
     load_Idt_to_Idtr();
 
-    unsigned char index = 32;
-
-    unsigned long long handler;
-    asm volatile ("lea lapic_intr_handler(%%rip), %[handler]" : [handler]"=r"(handler));
-    unsigned long long offset = handler;
-    unsigned short segment;
-    asm volatile ("mov %%cs, %0" : "=r"(segment));
-    unsigned short attribute = 0b1000111000000000; //割り込みディスクリプタの権限レベルはひとまず00に。
-
+    //IDTzeroクリア
     struct InterruptDescriptor empty_d;
     empty_d.offset_lo = 0;
     empty_d.segment = 0;
@@ -68,13 +60,33 @@ void init_intr(){
     empty_d.offset_hi = 0;
     empty_d.reserved = 0;
 
-    for (int i=0; i < 256; i++) {//IDTzeroクリア
+    for (int i=0; i < 256; i++) {
         IDT[i] = empty_d;
     }
+    //zeroクリア完了
 
+
+    //lapic_intr_handlerのidtへの登録
+    unsigned char index = 32;
+    unsigned long long handler;
+    asm volatile ("lea lapic_intr_handler(%%rip), %[handler]" : [handler]"=r"(handler));
+    unsigned long long offset = handler;
+    unsigned short segment;
+    asm volatile ("mov %%cs, %0" : "=r"(segment));
+    unsigned short attribute = 0b1000111000000000; //割り込みディスクリプタの権限レベルはひとまず00に。
 
     register_intr_handler(index, offset, segment, attribute);
+    //完了
 
+
+    //syscall_intr_handlerのidtへの登録
+    index = 0x80;
+    asm volatile ("lea syscall_handler(%%rip), %[handler]":[handler]"=r"(handler));
+    offset = handler;
+    register_intr_handler(index, offset, segment, attribute);
+    //完了
+
+    //割り込み受付開始
     asm volatile ("sti");
 
     return;
