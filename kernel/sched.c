@@ -1,13 +1,10 @@
 #include "util.h"
 #include "lapic_timer.h"
+#include "memory.h"
 
 #define TASK_NUM 3
-#define APP1_START 0x104000000
-#define APP1_END  0x105000000
-#define APP2_START 0x105000000
-#define APP2_END 0x106000000
-#define APP3_START 0x106000000
-#define APP3_END 0x107000000
+#define APP_START 0x40000000
+#define APP_END  0x41000000
 //#define STACK_SIZE 4096
 
 //char stack0 [STACK_SIZE];
@@ -38,12 +35,16 @@
 
 struct Task {
     unsigned long long sp;
+    unsigned long long cr3;
 };
 
 struct Task tasks[TASK_NUM];
 
 
 static void init_task(int idx, unsigned char *stack_bottom, unsigned long long rip) {
+    unsigned long long task_cr3 = tasks[idx].cr3;
+    asm volatile("mov %[task_cr3], %%cr3"::[task_cr3]"r"(task_cr3)); //appの仮想アドレス空間に切り替え
+
     unsigned long long *sp = (unsigned long long *)stack_bottom;
     unsigned long long ss;
     asm volatile("mov %%ss, %0":"=r"(ss));
@@ -78,18 +79,27 @@ static void init_task(int idx, unsigned char *stack_bottom, unsigned long long r
 
     //積み上げ完了
 
-    tasks[idx].sp =  (unsigned long long)stack_bottom - 8*20; //今回はエラーコードを積まなくていいので、ss,rsp,rflags,cs,ripの5つと、汎用レジスタ15個分、計8byte * 20 = 160byte分だけ上に伸びた場所を最終的なスタックトップにする。
-    
+    unsigned long long kernel_cr3 = get_kernel_cr3();
+    asm volatile("mov %[kernel_cr3], %%cr3"::[kernel_cr3]"r"(kernel_cr3)); //kernelの仮想アドレス空間に戻す
+
     return;
 }
 
 void init_tasks() {
-    init_task(1, (unsigned char *)APP2_END, (unsigned long long)APP2_START);
-    init_task(2, (unsigned char *)APP3_END, (unsigned long long)APP3_START);
-    unsigned long long sp0 = (unsigned long long)APP1_END;
-    asm volatile ("mov %0, %%rsp"::"m"(sp0));
-    unsigned long long rip = APP1_START;
-    asm volatile ("jmp %[app1_adr]"::[app1_adr]"m"(rip));
+    for (unsigned int i = 0; i < TASK_NUM; i++) {
+        tasks[i].cr3 = get_task_cr3s(i);//cr3レジスタの値を登録
+        tasks[i].sp = APP_END - 8*20;//今回はエラーコードを積まなくていいので、ss,rsp,rflags,cs,ripの5つと、汎用レジスタ15個分、計8byte * 20 = 160byte分だけ上に伸びた場所を最終的なスタックトップにする。
+    }
+    puts("before init_task!\n");
+    init_task(1, (unsigned char *)APP_END, (unsigned long long)APP_START);
+    init_task(2, (unsigned char *)APP_END, (unsigned long long)APP_START);
+    puts("after init_task!\n");
+    unsigned long long sp0 = (unsigned long long)APP_END; //スタックポインタに入れるのは仮想アドレスの方の底
+    unsigned long long app1_cr3 = get_task_cr3s(0); //cr3にはapp1の仮想アドレスを作るcr3の値を入れる
+    unsigned long long rip = (unsigned long long)APP_START; //jmp先は仮想アドレスの方
+    //asm volatile ("mov %0, %%cr3"::"r"(app1_cr3));
+    //asm volatile ("mov %0, %%rsp"::"r"(sp0));
+    //asm volatile ("jmp *%[app1_adr]"::[app1_adr]"r"(rip));
 }
 
 unsigned char current_idx = 0;
@@ -105,10 +115,12 @@ void schedule(unsigned long long sp) {
     unsigned char idx_next = (idx_just_before+1) % TASK_NUM; //次に実行するタスクの番号
     tasks[idx_just_before].sp = sp; //今まで実行してたタスクのスタックポインタをtasksに格納されてる構造体に登録
     unsigned long long next_sp = tasks[idx_next].sp;
+    unsigned long long next_cr3 = tasks[idx_next].cr3;
 
     lapic_set_eoi();
 
-    asm volatile ("mov %0, %%rsp"::"m"(next_sp));
+    asm volatile ("mov %0, %%cr3"::"r"(next_cr3));
+    asm volatile ("mov %0, %%rsp"::"r"(next_sp));
 
     asm volatile (
         "pop %r15\n"
