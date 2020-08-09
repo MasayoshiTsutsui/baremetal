@@ -27,7 +27,6 @@ unsigned int measure_lapic_freq_khz() {
 
     pm_timer_wait_millisec(2000);
 
-
     unsigned int counts_after_2000msec = *current_count;
 
     unsigned int answer = (max_of_32bit - counts_after_2000msec) / 2000;
@@ -35,7 +34,7 @@ unsigned int measure_lapic_freq_khz() {
     lapic_timer_freq_khz = answer;
 
     *lvt_timer = contents_of_lvt; //一応lvt_timerレジスタをもとの状態に戻しておく
-    *divide_config = contents_of_div; //divide_confitも同様
+    //*divide_config = contents_of_div; //divide_confitも同様
 
     return answer;
 }
