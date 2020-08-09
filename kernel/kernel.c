@@ -26,33 +26,6 @@ void start(void *SystemTable __attribute__ ((unused)), struct HardwareInfo *_har
   asm volatile ("lea schedule(%%rip), %[handler]":[handler]"=r"(handler));
 
   init_intr(); //割り込みの準備。基本消さない。
-  puts("after init_intr!\n");
-
-  //char *str = "syscall completed!\n";
-  //unsigned long long ret;
-  //asm volatile("mov %[call_id], %%rdi\n"
-               //"mov %[str], %%rsi\n"
-               //"int $0x80\n"
-               //"mov %%rax, %[ret]\n"
-               //:[ret]"=r"(ret)
-               //:[call_id]"r"((unsigned long long)SYSCALL_PUTS),
-                //[str]"m"((unsigned long long)str)
-  //);
-  //if (ret == 0) {
-    //puts("ret is correct!\n");
-  //}
-
-  unsigned long long kernel_cr3 = get_kernel_cr3();
-  unsigned long long cr3_0 = get_task_cr3s(0);
-  unsigned long long cr3_1 = get_task_cr3s(1);
-  unsigned long long cr3_2 = get_task_cr3s(2);
-  puth(kernel_cr3, 16);
-  puth(cr3_0, 16);
-  puth(cr3_1, 16);
-  puth(cr3_2, 16);
-
-
-
 
   lapic_periodic_exec(1000, handler);
 
