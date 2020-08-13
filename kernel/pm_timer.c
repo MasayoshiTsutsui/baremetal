@@ -2,7 +2,7 @@
 #include "util.h"
 
 unsigned int port_in(unsigned short arg1);
-void port_out(unsigned short arg1, unsigned short arg2);
+void port_out(unsigned short arg1, unsigned int arg2);
 //arg1 is the address of the port. arg2 is the data you want to store in the port.
 //now you can only hand 2byte data to port_out so if you want to hand 4byte data, replace si and dx with esi and edx in "port_io.s".
 

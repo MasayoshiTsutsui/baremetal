@@ -6,6 +6,6 @@ port_in:
     ret
 port_out:
     mov %di, %ax
-    mov %si, %dx 
-    out %ax, %dx
+    mov %esi, %edx 
+    out %ax, %edx
     ret
