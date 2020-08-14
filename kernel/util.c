@@ -91,7 +91,7 @@ void puth(unsigned long long value, unsigned char digits_len) {
             putc((char)(hexadecimal + 87));
         }
     }
-    putc('\n');
+    //putc('\n');
 }
 
 
