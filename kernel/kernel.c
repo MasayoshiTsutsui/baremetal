@@ -8,6 +8,7 @@
 #include "syscall.h"
 #include "memory.h"
 #include "pci.h"
+#include "nic.h"
 
 void start(void *SystemTable __attribute__ ((unused)), struct HardwareInfo *_hardware_info) {
   // From here - Put this part at the top of start() function
@@ -37,8 +38,12 @@ void start(void *SystemTable __attribute__ ((unused)), struct HardwareInfo *_har
   init_nic_pci();
 
   unsigned int base_addr = get_nic_base_address();
-  puth(base_addr, 10);
 
-  
+  init_nic(base_addr);
+
+  unsigned char str[] = "tsutsui";
+  send_frame(str, sizeof(str));
+
+  puts("send completed!\n");
   while (1);
 }

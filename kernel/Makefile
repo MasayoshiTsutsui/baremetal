@@ -5,7 +5,7 @@ all: kernel apps/app1 apps/app2 apps/app3
 	make -C ../
 	make copy
 
-kernel: kernel.o  segmentation.o hardware.o load_gdt.o font.o util.o port_io.o pm_timer.o lapic_timer.o interruption.o intr_handler.o sched.o syscall.o memory.o pci.o
+kernel: kernel.o  segmentation.o hardware.o load_gdt.o font.o util.o port_io.o pm_timer.o lapic_timer.o interruption.o intr_handler.o sched.o syscall.o memory.o pci.o nic.o
 	ld $(LDFLAGS) -T kernel.ld -o $@ $+
 
 apps/app1: apps/app1.o apps/syscall.o
