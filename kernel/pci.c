@@ -47,8 +47,6 @@ static void write_pci_conf(unsigned int bus, unsigned int device, unsigned int f
 
 static unsigned int get_nic_pci_header_type() {
     unsigned int reg3 = read_pci_conf(0,3,0,0x0c); //Qemuのnicのデバイス構成の、バス番号00、デバイス番号03、ファンクション番号00を渡し、03レジスタのoffsetは0cであるため。
-    puts("the content of reg3 is");
-    puth(reg3,10);
     unsigned int header_type = (reg3 >> 16) & 0b11111111;
     return header_type;
 }

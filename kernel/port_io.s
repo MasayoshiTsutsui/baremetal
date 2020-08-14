@@ -5,7 +5,7 @@ port_in:
     in %dx, %eax
     ret
 port_out:
-    mov %di, %ax
-    mov %esi, %edx 
-    out %ax, %edx
+    mov %di, %dx
+    mov %esi, %eax 
+    out %eax, %dx
     ret
