@@ -1,5 +1,4 @@
-# utokyo_syspro_baremetal
-Baremetal environment for "System programming lab" class in Dept. of Information Science, The University of Tokyo.
+# OS Fully Scratched with C
 
 
 ## Dependencies
